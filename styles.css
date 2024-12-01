@@ -1,0 +1,25 @@
+.translate-button {
+  font-size: 13px;
+  color: #0085ff;
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  user-select: none;
+}
+
+.translate-button:hover {
+  background-color: rgba(0, 133, 255, 0.1);
+  text-decoration: underline;
+}
+
+.translated-text {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: rgba(0, 133, 255, 0.05);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2e3338;
+  line-height: 1.4;
+}
