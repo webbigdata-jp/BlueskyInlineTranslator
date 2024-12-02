@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: #f5f5f5;
+      border: none;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #0085ff;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .notice {
+      background: #f0f7ff;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 12px 0;
+      font-size: 0.9em;
+    }
+    select, input {
+      width: 100%;
+      padding: 8px;
+      margin: 4px 0 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .checkbox-group {
+      margin: 16px 0;
+    }
+    button {
+      background: #0085ff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .success {
+      color: #00a152;
+      margin-top: 8px;
+      display: none;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+    .setup-guide {
+      background: #fff3e0;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    .setup-guide h3 {
+      color: #e65100;
+      margin-top: 0;
+    }
+    .setup-guide ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .notice.intro {
+      background: #f5f5f5;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icon128.png" alt="Bluesky Inline Translator" class="logo">
+    <h1>Bluesky Inline Translator</h1>
+  </div>
+
+  <div class="notice intro">
+    <p>Bluesky's default translation feature requires leaving the page to use Google Translate. This extension provides seamless inline translation using Chrome's built-in AI translator.</p>
+    <p>You can translate both when reading and writing posts. For languages other than English, Spanish, and Japanese, you can use the external Gemini API.</p>
+  </div>
+
+  <div class="setup-guide">
+    <h3>⚠️ Required Setup for Local Translation</h3>
+    <ol>
+      <li>Open <a href="chrome://flags/#translation-api" target="_blank">chrome://flags/#translation-api</a> in a new tab</li>
+      <li>Find "Experimental translation API"</li>
+      <li>Change the setting to "Enabled"</li>
+      <li>Restart Chrome to apply changes</li>
+    </ol>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="local">Local Model</button>
+    <button class="tab" data-tab="external">External API</button>
+  </div>
+
+  <div id="localTab" class="tab-content active">
+    <div class="card">
+      <h2>Local Model Settings</h2>
+      <div class="notice">
+        Fast, offline translation for supported language pairs. For other languages, please use the External API tab.
+      </div>
+      
+      <label>Target language for reading posts</label>
+      <select id="localReadingLanguage">
+        <option value="">Use browser language setting</option>
+        <option value="en">English</option>
+        <option value="ja">Japanese</option>
+        <option value="es">Spanish</option>
+      </select>
+
+      <label>Target language for writing posts</label>
+      <select id="localWritingLanguage">
+        <option value="en">English</option>
+        <option value="ja">Japanese</option>
+        <option value="es">Spanish</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="externalTab" class="tab-content">
+    <div class="card">
+      <h2>External API Settings</h2>
+      <div class="notice">
+        To translate languages not supported by the local model, you can use the Gemini API.<br>
+        Get your API key from <a href="https://ai.google.dev/" target="_blank">https://ai.google.dev/</a>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="useExternalApi">
+        <label for="useExternalApi">Enable External API</label>
+      </div>
+
+      <label for="apiKey">API Key</label>
+      <input type="text" id="apiKey" placeholder="Enter your API key">
+
+      <div id="apiSettings" style="display: none">
+        <label>Target language for reading posts</label>
+        <select id="apiReadingLanguage">
+          <option value="">Use browser language setting</option>
+          <!-- Full language list will be populated here -->
+        </select>
+
+        <label>Target language for writing posts</label>
+        <select id="apiWritingLanguage">
+          <!-- Full language list will be populated here -->
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <button id="saveButton">Save Settings</button>
+  <div id="successMessage" class="success">Settings saved successfully</div>
+
+  <script src="iltr_options.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+data
+memo.txt
+scripts
+venv
+# ログファイル
+*.log
+env.sh
+*log.txt
+user_log
+logs
+old
+.chainlit
+my_test.html
+
+
+
+# IDEやエディタによる設定ファイル
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Linux
+.Trash-*
+.nfs*
+
+# その他の隠しファイルやディレクトリ
+*.env
+.*.swp
+.*.swo
+.*.swn
+*.pid
+*.seed
+*.pid.lock
+*~
+*.orig
+*.bak
+*.old
+*.backup
+*.swp
+*.swo
+*.DS_Store
+*.pyc
+*.pyo
+*.so
+*.dylib
+*.swp
+*.swo
+*.pid
+*.seed
+*.pid.lock

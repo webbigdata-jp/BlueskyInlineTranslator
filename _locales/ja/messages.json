@@ -1,0 +1,30 @@
+{
+  "errorUnsupportedLanguagePair": {
+    "message": "この言語ペアの翻訳はサポートされていません。拡張機能の設定で外部APIキーを設定することで、より多くの言語ペアを有効にできます。"
+  },
+  "downloadingModelProgress": {
+    "message": "翻訳モデルをダウンロード中: $PROGRESS$%",
+    "placeholders": {
+      "progress": {
+        "content": "$1"
+      }
+    }
+  },
+  "translationError": {
+    "message": "翻訳エラー: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatingMessage": {
+    "message": "翻訳中..."
+  },
+  "translationFailed": {
+    "message": "翻訳に失敗しました"
+  },
+  "translateButtonLabel": {
+    "message": "投稿を翻訳"
+  }
+}

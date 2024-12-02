@@ -1,0 +1,30 @@
+{
+  "errorUnsupportedLanguagePair": {
+    "message": "La traducción para este par de idiomas no está soportada. Puede habilitar más pares de idiomas configurando una clave API externa en la configuración de la extensión."
+  },
+  "downloadingModelProgress": {
+    "message": "Descargando modelo de traducción: $PROGRESS$%",
+    "placeholders": {
+      "progress": {
+        "content": "$1"
+      }
+    }
+  },
+  "translationError": {
+    "message": "Error de traducción: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatingMessage": {
+    "message": "Traduciendo..."
+  },
+  "translationFailed": {
+    "message": "La traducción falló"
+  },
+  "translateButtonLabel": {
+    "message": "Traducir publicación"
+  }
+}

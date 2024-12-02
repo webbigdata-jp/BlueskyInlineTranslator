@@ -1,0 +1,30 @@
+{
+  "errorUnsupportedLanguagePair": {
+    "message": "Translation for this language pair is not supported. You can enable more language pairs by setting up an external API key in the extension settings."
+  },
+  "downloadingModelProgress": {
+    "message": "Downloading translation model: $PROGRESS$%",
+    "placeholders": {
+      "progress": {
+        "content": "$1"
+      }
+    }
+  },
+  "translationError": {
+    "message": "Translation error: $ERROR$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatingMessage": {
+    "message": "Translating..."
+  },
+  "translationFailed": {
+    "message": "Translation failed"
+  },
+  "translateButtonLabel": {
+    "message": "Translate post"
+  }
+}

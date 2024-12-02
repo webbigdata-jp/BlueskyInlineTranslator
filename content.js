@@ -1,17 +1,23 @@
-// content.js
 let translationSettings = {
-  readingLanguage: 'en-ja',
-  writingLanguage: 'ja-en',
-  apiKey: ''
+  useLocal: true,
+  useExternalApi: false,
+  apiKey: '',
+  localReadingLanguage: '',
+  localWritingLanguage: 'en',
+  apiReadingLanguage: '',
+  apiWritingLanguage: 'en'
 };
 
-// 設定を読み込む
-function loadSettings() {
+async function loadSettings() {
   return new Promise((resolve) => {
     chrome.storage.sync.get({
-      readingLanguage: 'en-ja',
-      writingLanguage: 'ja-en',
-      apiKey: ''
+      useLocal: true,
+      useExternalApi: false,
+      apiKey: '',
+      localReadingLanguage: '',
+      localWritingLanguage: 'en',
+      apiReadingLanguage: '',
+      apiWritingLanguage: 'en'
     }, function(items) {
       translationSettings = items;
       resolve(items);
@@ -19,41 +25,73 @@ function loadSettings() {
   });
 }
 
-// 外部APIを使用した翻訳
+async function detectLanguage(text) {
+  return new Promise((resolve, reject) => {
+    chrome.i18n.detectLanguage(text, (result) => {
+      if (chrome.runtime.lastError) {
+        console.error('Language detection error:', chrome.runtime.lastError);
+        resolve('en');
+        return;
+      }
+      
+      const detected = result.languages[0];
+      resolve(detected?.language || 'en');
+    });
+  });
+}
+
+async function getTargetLanguage(mode = 'reading') {
+  if (mode === 'reading') {
+    if (translationSettings.useLocal) {
+      return translationSettings.localReadingLanguage || 
+             chrome.i18n.getUILanguage() || 
+             navigator.language?.split('-')[0] || 
+             'en';
+    }
+    return translationSettings.apiReadingLanguage || 'en';
+  }
+  
+  if (translationSettings.useLocal) {
+    return translationSettings.localWritingLanguage;
+  }
+  return translationSettings.apiWritingLanguage;
+}
+
 async function translateWithExternalAPI(text, sourceLang, targetLang) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({
       type: 'translate',
       text: text,
+      sourceLang: sourceLang,
       targetLang: targetLang,
       apiKey: translationSettings.apiKey
     }, response => {
       if (response.error) {
         reject(new Error(response.error));
       } else {
-        resolve(response);
+        resolve(response.text);
       }
     });
   });
 }
 
-async function translateText(text, languagePair) {
+async function translateText(text, mode, progressCallback = null) {
   try {
-    const [sourceLang, targetLang] = languagePair.split('-');
+    const sourceLang = await detectLanguage(text);
+    const targetLang = await getTargetLanguage(mode);
     
-    // まず内蔵の翻訳機能を試す
     const canTranslate = await translation.canTranslate({
       sourceLanguage: sourceLang,
       targetLanguage: targetLang
     });
 
-    // 内蔵の翻訳が使えない場合はAPIキーをチェック
-    if (canTranslate === 'no' && translationSettings.apiKey) {
-      return await translateWithExternalAPI(text, sourceLang, targetLang);
-    }
-
+    // Check API support first
     if (canTranslate === 'no') {
-      throw new Error('この言語ペアの翻訳はサポートされていません');
+      if (translationSettings.apiKey) {
+        return await translateWithExternalAPI(text, sourceLang, targetLang);
+      } else {
+        throw new Error('Translation for this language pair is not supported. You can enable more language pairs by setting up an external API key in the extension settings.');
+      }
     }
 
     const translator = await translation.createTranslator({
@@ -63,7 +101,11 @@ async function translateText(text, languagePair) {
 
     if (canTranslate === 'after-download') {
       translator.addEventListener('downloadprogress', (e) => {
-        console.log(`ダウンロード進捗: ${e.loaded}/${e.total}`);
+        const progress = Math.round((e.loaded / e.total) * 100);
+        if (progressCallback) {
+          progressCallback(`Downloading translation model: ${progress}%`);
+        }
+        console.log(`Download progress: ${e.loaded}/${e.total}`);
       });
       await translator.ready;
     }
@@ -71,17 +113,19 @@ async function translateText(text, languagePair) {
     return await translator.translate(text);
   } catch (e) {
     console.error('Translation error:', e);
-    return `翻訳エラー: ${e.message}`;
+    return `Translation error: ${e.message}`;
   }
 }
 
-function addTranslateButton(postElement) {
+async function addTranslateButton(postElement) {
   const existingButton = postElement.parentElement.querySelector('.translate-button');
   if (existingButton) {
     return;
   }
 
-  const [sourceLang, targetLang] = translationSettings.readingLanguage.split('-');
+  const sourceLang = await detectLanguage(postElement.textContent);
+  const targetLang = await getTargetLanguage("reading");
+
   const buttonText = `${sourceLang}→${targetLang}`;
 
   const translateButton = document.createElement('span');
@@ -109,13 +153,19 @@ function addTranslateButton(postElement) {
       postElement.parentElement.insertBefore(translatedDiv, postElement.nextSibling);
     }
 
-    translatedDiv.textContent = '翻訳中...';
+    translatedDiv.textContent = 'Translating...';
     
     try {
-      const translatedText = await translateText(originalText, translationSettings.readingLanguage);
+      const translatedText = await translateText(
+        originalText, 
+        "reading",
+        (progressMessage) => {
+          translatedDiv.textContent = progressMessage;
+        }
+      );
       translatedDiv.textContent = translatedText;
     } catch (error) {
-      translatedDiv.textContent = '翻訳に失敗しました';
+      translatedDiv.textContent = 'Translation failed';
       console.error('Translation error:', error);
     }
   });
@@ -123,7 +173,8 @@ function addTranslateButton(postElement) {
   postElement.parentElement.insertBefore(translateButton, postElement.nextSibling);
 }
 
-function addPostTranslateButton() {
+// Similar changes for addPostTranslateButton()
+async function addPostTranslateButton() {
   if (document.querySelector('.post-translate-button')) {
     return;
   }
@@ -134,7 +185,9 @@ function addPostTranslateButton() {
   const spacer = buttonContainer.querySelector('div[style*="flex: 1"]');
   if (!spacer) return;
 
-  const [sourceLang, targetLang] = translationSettings.writingLanguage.split('-');
+  const sourceLang = await detectLanguage(text);
+  const targetLang = await getTargetLanguage(mode);
+
   const buttonText = `${sourceLang}→${targetLang}`;
 
   const translateButton = document.createElement('button');
@@ -162,11 +215,10 @@ function addPostTranslateButton() {
     const originalText = editor.textContent;
     if (!originalText) return;
 
-    translateButton.textContent = '翻訳中...';
+    translateButton.textContent = 'Translating...';
     translateButton.disabled = true;
 
     try {
-      const translatedText = await translateText(originalText, translationSettings.writingLanguage);
       let translatedDiv = editor.parentElement.querySelector('.translated-post-text');
       if (!translatedDiv) {
         translatedDiv = document.createElement('div');
@@ -181,9 +233,17 @@ function addPostTranslateButton() {
         `;
         editor.parentElement.appendChild(translatedDiv);
       }
+
+      const translatedText = await translateText(
+        originalText, 
+        "writing",
+        (progressMessage) => {
+          translatedDiv.textContent = progressMessage;
+        }
+      );
       translatedDiv.textContent = translatedText;
     } catch (error) {
-      alert('翻訳に失敗しました');
+      alert('Translation failed');
       console.error('Translation error:', error);
     } finally {
       translateButton.textContent = buttonText;
@@ -194,17 +254,16 @@ function addPostTranslateButton() {
   buttonContainer.insertBefore(translateButton, spacer.nextSibling);
 }
 
-// 投稿を見つけて処理する関数
-function processNewPosts() {
+
+async function processNewPosts() {
   const posts = document.querySelectorAll('div[dir="auto"][data-word-wrap="1"]:not(.processed-post)');
-  posts.forEach(post => {
-    // 処理済みマークを付ける
+  for (const post of posts) {
     post.classList.add('processed-post');
-    addTranslateButton(post);
-  });
+    await addTranslateButton(post);
+  }
 }
 
-// DOM変更の監視
+
 function initializeObserver() {
   let timeoutId = null;
   
@@ -225,25 +284,22 @@ function initializeObserver() {
   });
 }
 
-// 投稿フォームの監視を追加
-function checkForComposeForm() {
+async function checkForComposeForm() {
   const composerExists = document.querySelector('.ProseMirror');
   if (composerExists) {
     addPostTranslateButton();
   }
 }
 
-// 初期化
 async function initialize() {
   await loadSettings();
-  setTimeout(() => {
-    processNewPosts();
-    initializeObserver();
-    checkForComposeForm();
+  setTimeout(async () => {
+    await processNewPosts();
+    await initializeObserver();
+    await checkForComposeForm();
   }, 1000);
 }
 
-// ページ遷移の検出
 let lastUrl = location.href;
 new MutationObserver(() => {
   const url = location.href;
@@ -253,7 +309,6 @@ new MutationObserver(() => {
   }
 }).observe(document, {subtree: true, childList: true});
 
-// ページ遷移監視のための追加のMutationObserver
 const composerObserver = new MutationObserver(() => {
   checkForComposeForm();
 });
@@ -263,11 +318,9 @@ composerObserver.observe(document.body, {
   subtree: true
 });
 
-// 追加のイベントリスナー
 window.addEventListener('load', () => setTimeout(processNewPosts, 1000));
 window.addEventListener('popstate', () => setTimeout(processNewPosts, 1000));
 
-// 初期化の実行
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
 } else {
