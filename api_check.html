@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Translation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            min-height: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #0085ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        .status {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Translation Test</h1>
+    
+    <div class="test-section">
+        <h2>Translation API Check</h2>
+        <div id="apiCheck" class="status">Checking available APIs...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>English to Japanese</h2>
+        <textarea id="enText" rows="4" style="width: 100%" placeholder="Enter English text here">Hello world! How are you today?</textarea>
+        <div class="status" id="enJaStatus"></div>
+        <button onclick="translateEnToJa()">Translate to Japanese</button>
+        <div class="result" id="jaResult"></div>
+    </div>
+
+    <script>
+        let translator = null;
+
+        // 利用可能なAPIをチェック
+        async function checkAvailableAPIs() {
+            const apiCheck = document.getElementById('apiCheck');
+            apiCheck.innerHTML = '';
+
+            // chrome.i18n APIのチェック
+            if (typeof chrome !== 'undefined' && chrome.i18n) {
+                apiCheck.innerHTML += '✓ chrome.i18n is available<br>';
+            } else {
+                apiCheck.innerHTML += '× chrome.i18n is not available<br>';
+            }
+
+            // self.ai APIのチェック
+            if (typeof self !== 'undefined' && self.ai && self.ai.translator) {
+                apiCheck.innerHTML += '✓ self.ai.translator is available<br>';
+            } else {
+                apiCheck.innerHTML += '× self.ai.translator is not available<br>';
+            }
+
+            // translation APIのチェック
+            if (typeof translation !== 'undefined') {
+                apiCheck.innerHTML += '✓ translation API is available<br>';
+                try {
+                    const canTranslate = await translation.canTranslate({
+                        sourceLanguage: 'en',
+                        targetLanguage: 'ja'
+                    });
+                    apiCheck.innerHTML += `✓ canTranslate result: ${canTranslate}<br>`;
+                } catch (e) {
+                    apiCheck.innerHTML += `× translation.canTranslate error: ${e.message}<br>`;
+                }
+            } else {
+                apiCheck.innerHTML += '× translation API is not available<br>';
+            }
+        }
+
+        async function initializeTranslator(sourceLang, targetLang, statusElement) {
+            try {
+                statusElement.textContent = "Checking translation capability...";
+                
+                // Both APIs を試す
+                if (typeof translation !== 'undefined') {
+                    const canTranslate = await translation.canTranslate({
+                        sourceLanguage: sourceLang,
+                        targetLanguage: targetLang
+                    });
+                    
+                    if (canTranslate !== 'no') {
+                        statusElement.textContent = "Using Chrome translation API...";
+                        return await translation.createTranslator({
+                            sourceLanguage: sourceLang,
+                            targetLanguage: targetLang
+                        });
+                    }
+                }
+                
+                if (typeof self !== 'undefined' && self.ai && self.ai.translator) {
+                    statusElement.textContent = "Using self.ai translation API...";
+                    return await self.ai.translator.create({
+                        sourceLanguage: sourceLang,
+                        targetLanguage: targetLang
+                    });
+                }
+                
+                throw new Error('No translation API available');
+            } catch (error) {
+                statusElement.textContent = `Initialization error: ${error.message}`;
+                console.error('Translator initialization error:', error);
+                return null;
+            }
+        }
+
+        async function translateEnToJa() {
+            const statusElement = document.getElementById('enJaStatus');
+            const resultElement = document.getElementById('jaResult');
+            
+            if (!translator) {
+                translator = await initializeTranslator('en', 'ja', statusElement);
+                if (!translator) return;
+            }
+
+            const text = document.getElementById('enText').value;
+            resultElement.textContent = 'Translating...';
+            
+            try {
+                const translated = await translator.translate(text);
+                resultElement.textContent = translated;
+            } catch (error) {
+                resultElement.textContent = `Translation error: ${error.message}`;
+                console.error('Translation error:', error);
+            }
+        }
+
+        // 初期化時にAPI確認を実行
+        checkAvailableAPIs();
+    </script>
+</body>
+</html>

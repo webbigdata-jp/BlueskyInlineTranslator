@@ -26,5 +26,8 @@
   },
   "translateButtonLabel": {
     "message": "Traducir publicación"
+  },
+  "replaceWithTranslation": {
+    "message": "Reemplazar con traducción"
   }
 }

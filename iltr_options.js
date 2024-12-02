@@ -1,18 +1,16 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // Supported languages list
-  const supportedLanguages = {
-    ar: "Arabic", bg: "Bulgarian", bn: "Bengali", cs: "Czech", da: "Danish", 
-    de: "German", el: "Greek", en: "English", es: "Spanish", et: "Estonian",
-    fi: "Finnish", fr: "French", gu: "Gujarati", he: "Hebrew", hi: "Hindi",
-    hr: "Croatian", hu: "Hungarian", id: "Indonesian", it: "Italian", 
-    ja: "Japanese", kn: "Kannada", ko: "Korean", lt: "Lithuanian", 
-    lv: "Latvian", ml: "Malayalam", mr: "Marathi", nl: "Dutch", no: "Norwegian",
-    pl: "Polish", pt: "Portuguese", ro: "Romanian", ru: "Russian", 
-    sk: "Slovak", sl: "Slovenian", sr: "Serbian", sv: "Swedish", 
-    sw: "Swahili", ta: "Tamil", te: "Telugu", th: "Thai", tr: "Turkish",
-    uk: "Ukrainian", ur: "Urdu", vi: "Vietnamese", zh: "Chinese"
-  };
+import { getLanguageName, supportedLanguages } from './utils/languages.js';
 
+function toggleApiSettings() {
+  const apiCheckbox = document.getElementById('useExternalApi');
+  const apiKey = document.getElementById('apiKey');
+  const apiSettings = document.getElementById('apiSettings');
+  
+  apiSettings.style.display = 
+    (apiCheckbox.checked && apiKey.value.trim()) ? 'block' : 'none';
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -30,23 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Toggle API settings visibility
+  // API settings event listeners
   const apiCheckbox = document.getElementById('useExternalApi');
   const apiKey = document.getElementById('apiKey');
-  const apiSettings = document.getElementById('apiSettings');
-
-  function toggleApiSettings() {
-    apiSettings.style.display = 
-      (apiCheckbox.checked && apiKey.value.trim()) ? 'block' : 'none';
-  }
 
   apiCheckbox.addEventListener('change', toggleApiSettings);
   apiKey.addEventListener('input', toggleApiSettings);
 
-  // Load saved settings
+  // Load and save settings
   loadSettings();
-
-  // Save settings
   document.getElementById('saveButton').addEventListener('click', saveSettings);
 });
 

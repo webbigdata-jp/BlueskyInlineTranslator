@@ -26,5 +26,8 @@
   },
   "translateButtonLabel": {
     "message": "Translate post"
+  },
+  "replaceWithTranslation": {
+    "message": "Replace with translation"
   }
 }

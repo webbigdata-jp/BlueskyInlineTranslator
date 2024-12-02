@@ -25,26 +25,99 @@ async function loadSettings() {
   });
 }
 
+
 async function detectLanguage(text) {
+  const textWithoutEmoji = text.replace(/[\u{1F000}-\u{1F6FF}]|[\u{1F900}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu, '').trim();
+  const textWithoutFlags = textWithoutEmoji.replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, '').trim();
+
+  const spanishPatterns = [
+    /\b(es|está|este|esta|una|las|los|el|la|son|con|por|para)\b/i,
+    /ción\b/,
+    /[áéíóúñ]/i
+  ];
+  console.log('detectLanguage');
+  console.log(text);
+  
+  function hasSpanishCharacteristics(text) {
+    return spanishPatterns.some(pattern => pattern.test(text));
+  }
+
+  const MIN_TEXT_LENGTH = 10;
+  function isProbablyProperNouns(text) {
+    const words = text.split(/\s+/);
+    const capitalizedWords = words.filter(word => 
+      word.length > 0 && word[0] === word[0].toUpperCase()
+    );
+    return capitalizedWords.length / words.length > 0.5;
+  }
+
   return new Promise((resolve, reject) => {
-    chrome.i18n.detectLanguage(text, (result) => {
+    chrome.i18n.detectLanguage(textWithoutFlags, (result) => {
       if (chrome.runtime.lastError) {
         console.error('Language detection error:', chrome.runtime.lastError);
         resolve('en');
         return;
       }
+
+      const CONFIDENCE_THRESHOLD = 0.7;
       
+      if (!result.languages.length) {
+        if (hasSpanishCharacteristics(textWithoutFlags)) {
+          resolve('es');
+        } else {
+          resolve('en');
+        }
+        return;
+      }
+
       const detected = result.languages[0];
-      resolve(detected?.language || 'en');
+      console.log('detected');
+      console.log(detected);
+      if (detected.language == "es"){
+        resolve('es');
+        return;
+      }
+      
+      // 固有名詞が多い場合は追加チェック
+      if (isProbablyProperNouns(textWithoutFlags)) {
+        // アルファベットの割合をチェック
+        const englishCharRegex = /[a-zA-Z]/g;
+        const englishCharCount = (textWithoutFlags.match(englishCharRegex) || []).length;
+        const englishCharRatio = englishCharCount / textWithoutFlags.length;
+        
+        if (englishCharRatio > 0.8) {
+          resolve('en');
+          return;
+        }
+      }
+
+      // ASCII文字の割合をチェック
+      const asciiCharCount = textWithoutFlags.split('').filter(char => char.charCodeAt(0) < 128).length;
+      const asciiRatio = asciiCharCount / textWithoutFlags.length;
+      
+      if (asciiRatio > 0.9) {  // ほとんどがASCII文字の場合
+        resolve('en');
+        return;
+      }
+      // 言語コードからカントリーコードを削除（例：en-US → en）
+      const baseLanguage = detected.language.split('-')[0];
+
+      if (baseLanguage === 'en' && hasSpanishCharacteristics(textWithoutFlags)) {
+        resolve('es');
+        return;
+      }
+
+      resolve(baseLanguage || 'en');
     });
   });
 }
+
 
 async function getTargetLanguage(mode = 'reading') {
   if (mode === 'reading') {
     if (translationSettings.useLocal) {
       return translationSettings.localReadingLanguage || 
-             chrome.i18n.getUILanguage() || 
+             chrome.i18n.getUILanguage().split('-')[0] || 
              navigator.language?.split('-')[0] || 
              'en';
     }
@@ -58,6 +131,7 @@ async function getTargetLanguage(mode = 'reading') {
 }
 
 async function translateWithExternalAPI(text, sourceLang, targetLang) {
+  console.log("In translateWithExternalAPI");
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({
       type: 'translate',
@@ -75,6 +149,7 @@ async function translateWithExternalAPI(text, sourceLang, targetLang) {
   });
 }
 
+
 async function translateText(text, mode, progressCallback = null) {
   try {
     const sourceLang = await detectLanguage(text);
@@ -85,39 +160,46 @@ async function translateText(text, mode, progressCallback = null) {
       targetLanguage: targetLang
     });
 
-    // Check API support first
-    if (canTranslate === 'no') {
-      if (translationSettings.apiKey) {
-        return await translateWithExternalAPI(text, sourceLang, targetLang);
-      } else {
-        throw new Error('Translation for this language pair is not supported. You can enable more language pairs by setting up an external API key in the extension settings.');
-      }
-    }
-
-    const translator = await translation.createTranslator({
-      sourceLanguage: sourceLang,
-      targetLanguage: targetLang
-    });
-
-    if (canTranslate === 'after-download') {
-      translator.addEventListener('downloadprogress', (e) => {
-        const progress = Math.round((e.loaded / e.total) * 100);
-        if (progressCallback) {
-          progressCallback(`Downloading translation model: ${progress}%`);
-        }
-        console.log(`Download progress: ${e.loaded}/${e.total}`);
+    // ローカルモデルで翻訳可能
+    if (canTranslate === 'yes') {
+      const translator = await translation.createTranslator({
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang
       });
-      await translator.ready;
+      return await translator.translate(text);
     }
     
-    return await translator.translate(text);
+    // ダウンロード後に翻訳可能
+    if (canTranslate === 'after-download') {
+      const translator = await translation.createTranslator({
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang
+      });
+      translator.ondownloadprogress = (e) => {
+        const progress = Math.round((e.loaded / e.total) * 100);
+        if (progressCallback) {
+          progressCallback(chrome.i18n.getMessage('downloadingModelProgress', [progress]));
+        }
+      };
+      await translator.ready;
+      return await translator.translate(text);
+    }
+
+    // 外部APIが許可されていない場合はエラー
+    if (!translationSettings.useExternalApi) {
+      throw new Error(chrome.i18n.getMessage('errorUnsupportedLanguagePair'));
+    }
+
+    // 最後の手段として外部API
+    return await translateWithExternalAPI(text, sourceLang, targetLang);
   } catch (e) {
     console.error('Translation error:', e);
-    return `Translation error: ${e.message}`;
+    return chrome.i18n.getMessage('translationError', [e.message]);
   }
 }
 
 async function addTranslateButton(postElement) {
+  console.log("addTranslateButton");
   const existingButton = postElement.parentElement.querySelector('.translate-button');
   if (existingButton) {
     return;
@@ -125,8 +207,15 @@ async function addTranslateButton(postElement) {
 
   const sourceLang = await detectLanguage(postElement.textContent);
   const targetLang = await getTargetLanguage("reading");
+  console.log(`sourceLang: ${sourceLang}`);
+  console.log(`targetLang: ${targetLang}`);
+
+  if (sourceLang == targetLang){
+    return
+  }
 
   const buttonText = `${sourceLang}→${targetLang}`;
+  console.log(buttonText);
 
   const translateButton = document.createElement('span');
   translateButton.className = 'translate-button';
@@ -150,10 +239,11 @@ async function addTranslateButton(postElement) {
       translatedDiv.style.padding = '8px';
       translatedDiv.style.backgroundColor = 'rgba(0, 133, 255, 0.05)';
       translatedDiv.style.borderRadius = '8px';
+      translatedDiv.style.whiteSpace = 'pre-wrap'; 
       postElement.parentElement.insertBefore(translatedDiv, postElement.nextSibling);
     }
 
-    translatedDiv.textContent = 'Translating...';
+    translatedDiv.textContent = chrome.i18n.getMessage('translatingMessage');
     
     try {
       const translatedText = await translateText(
@@ -165,15 +255,14 @@ async function addTranslateButton(postElement) {
       );
       translatedDiv.textContent = translatedText;
     } catch (error) {
-      translatedDiv.textContent = 'Translation failed';
+      translatedDiv.textContent = chrome.i18n.getMessage('translationFailed');
       console.error('Translation error:', error);
     }
   });
-  
   postElement.parentElement.insertBefore(translateButton, postElement.nextSibling);
 }
 
-// Similar changes for addPostTranslateButton()
+
 async function addPostTranslateButton() {
   if (document.querySelector('.post-translate-button')) {
     return;
@@ -185,14 +274,14 @@ async function addPostTranslateButton() {
   const spacer = buttonContainer.querySelector('div[style*="flex: 1"]');
   if (!spacer) return;
 
-  const sourceLang = await detectLanguage(text);
-  const targetLang = await getTargetLanguage(mode);
+  const sourceLang = await getTargetLanguage("reading");
+  const targetLang = await getTargetLanguage("writing");
 
   const buttonText = `${sourceLang}→${targetLang}`;
 
   const translateButton = document.createElement('button');
   translateButton.className = 'post-translate-button';
-  translateButton.setAttribute('aria-label', 'Translate post');
+  translateButton.setAttribute('aria-label', chrome.i18n.getMessage('translateButtonLabel'));
   translateButton.setAttribute('role', 'button');
   translateButton.style.cssText = `
     background-color: rgb(255, 255, 255);
@@ -215,7 +304,7 @@ async function addPostTranslateButton() {
     const originalText = editor.textContent;
     if (!originalText) return;
 
-    translateButton.textContent = 'Translating...';
+    translateButton.textContent = chrome.i18n.getMessage('translatingMessage');
     translateButton.disabled = true;
 
     try {
@@ -242,6 +331,34 @@ async function addPostTranslateButton() {
         }
       );
       translatedDiv.textContent = translatedText;
+
+      // Add replace button
+      let replaceButton = editor.parentElement.querySelector('.replace-translation-button');
+      if (!replaceButton) {
+        replaceButton = document.createElement('button');
+        replaceButton.className = 'replace-translation-button';
+        replaceButton.style.cssText = `
+          background-color: rgb(255, 255, 255);
+          padding: 4px 8px;
+          border-radius: 4px;
+          border: 1px solid rgb(239, 243, 244);
+          cursor: pointer;
+          margin-top: 4px;
+          font-size: 13px;
+          color: rgb(83, 100, 113);
+        `;
+        replaceButton.textContent = chrome.i18n.getMessage('replaceWithTranslation');
+
+        translatedDiv.appendChild(replaceButton);
+
+        replaceButton.addEventListener('click', () => {
+          // Replace editor content with translated text
+          editor.innerHTML = `<p>${translatedText}</p>`;
+          
+          // Remove translated div and replace button
+          translatedDiv.remove();
+        });
+      }
     } catch (error) {
       alert('Translation failed');
       console.error('Translation error:', error);

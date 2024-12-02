@@ -3,98 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="google" content="notranslate">
+  <link rel="stylesheet" href="options.css">
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    .tabs {
-      display: flex;
-      gap: 2px;
-      margin-bottom: 20px;
-    }
-    .tab {
-      padding: 12px 24px;
-      background: #f5f5f5;
-      border: none;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: #0085ff;
-      color: white;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .notice {
-      background: #f0f7ff;
-      padding: 12px;
-      border-radius: 4px;
-      margin: 12px 0;
-      font-size: 0.9em;
-    }
-    select, input {
-      width: 100%;
-      padding: 8px;
-      margin: 4px 0 16px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    .checkbox-group {
-      margin: 16px 0;
-    }
-    button {
-      background: #0085ff;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .success {
-      color: #00a152;
-      margin-top: 8px;
-      display: none;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .logo {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-    }
-    .setup-guide {
-      background: #fff3e0;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-    }
-    .setup-guide h3 {
-      color: #e65100;
-      margin-top: 0;
-    }
-    .setup-guide ol {
-      margin: 0;
-      padding-left: 20px;
-    }
-    .notice.intro {
-      background: #f5f5f5;
-      margin-bottom: 24px;
-    }
   </style>
 </head>
 <body>
@@ -155,8 +65,10 @@
         Get your API key from <a href="https://ai.google.dev/" target="_blank">https://ai.google.dev/</a>
       </div>
       <div class="checkbox-group">
-        <input type="checkbox" id="useExternalApi">
-        <label for="useExternalApi">Enable External API</label>
+        <span>Enable External API</span>
+        <label class="toggleButton" >
+          <input type="checkbox" id="useExternalApi" class="toggleButton__checkbox" />
+        </label>
       </div>
 
       <label for="apiKey">API Key</label>
@@ -180,6 +92,6 @@
   <button id="saveButton">Save Settings</button>
   <div id="successMessage" class="success">Settings saved successfully</div>
 
-  <script src="iltr_options.js"></script>
+  <script type="module" src="iltr_options.js"></script>
 </body>
 </html>

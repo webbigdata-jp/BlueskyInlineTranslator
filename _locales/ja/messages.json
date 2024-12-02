@@ -26,5 +26,8 @@
   },
   "translateButtonLabel": {
     "message": "投稿を翻訳"
+  },
+  "replaceWithTranslation": {
+    "message": "翻訳文に置き換え"
   }
 }
