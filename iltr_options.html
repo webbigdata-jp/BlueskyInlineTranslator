@@ -3,94 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="google" content="notranslate">
-  <link rel="stylesheet" href="options.css">
-  <style>
-  </style>
+  <link rel="stylesheet" href="iltr_options.css">
 </head>
 <body>
   <div class="header">
-    <img src="icon128.png" alt="Bluesky Inline Translator" class="logo">
-    <h1>Bluesky Inline Translator</h1>
+    <img src="image/icon128.png" alt="" class="logo" id="extensionIcon">
+    <h1 id="extensionName"></h1>
   </div>
 
-  <div class="notice intro">
-    <p>Bluesky's default translation feature requires leaving the page to use Google Translate. This extension provides seamless inline translation using Chrome's built-in AI translator.</p>
-    <p>You can translate both when reading and writing posts. For languages other than English, Spanish, and Japanese, you can use the external Gemini API.</p>
+  <div class="notice intro" id="introText">
   </div>
 
   <div class="setup-guide">
-    <h3>⚠️ Required Setup for Local Translation</h3>
+    <h3 id="setupGuideTitle"></h3>
     <ol>
-      <li>Open <a href="chrome://flags/#translation-api" target="_blank">chrome://flags/#translation-api</a> in a new tab</li>
-      <li>Find "Experimental translation API"</li>
-      <li>Change the setting to "Enabled"</li>
-      <li>Restart Chrome to apply changes</li>
+      <li id="setupGuideStep1"></li>
+      <li id="setupGuideStep2"></li>
+      <li id="setupGuideStep3"></li>
     </ol>
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="local">Local Model</button>
-    <button class="tab" data-tab="external">External API</button>
+    <button class="tab active" data-tab="local" id="localModelTab"></button>
+    <button class="tab" data-tab="external" id="externalApiTab"></button>
   </div>
 
   <div id="localTab" class="tab-content active">
     <div class="card">
-      <h2>Local Model Settings</h2>
-      <div class="notice">
-        Fast, offline translation for supported language pairs. For other languages, please use the External API tab.
+      <h2 id="localModelSettingsTitle"></h2>
+      <div class="notice" id="localModelNotice">
       </div>
       
-      <label>Target language for reading posts</label>
+      <label id="targetLanguageReading"></label>
       <select id="localReadingLanguage">
-        <option value="">Use browser language setting</option>
+        <option value="" id="useBrowserLanguage"></option>
         <option value="en">English</option>
-        <option value="ja">Japanese</option>
-        <option value="es">Spanish</option>
+        <option value="ja">日本語</option>
+        <option value="es">Español</option>
       </select>
 
-      <label>Target language for writing posts</label>
+      <label id="targetLanguageWriting"></label>
       <select id="localWritingLanguage">
         <option value="en">English</option>
-        <option value="ja">Japanese</option>
-        <option value="es">Spanish</option>
+        <option value="ja">日本語</option>
+        <option value="es">Español</option>
       </select>
     </div>
   </div>
 
   <div id="externalTab" class="tab-content">
     <div class="card">
-      <h2>External API Settings</h2>
-      <div class="notice">
-        To translate languages not supported by the local model, you can use the Gemini API.<br>
-        Get your API key from <a href="https://ai.google.dev/" target="_blank">https://ai.google.dev/</a>
+      <h2 id="externalApiSettingsTitle"></h2>
+      <div class="notice" id="externalApiNotice">
       </div>
+      
       <div class="checkbox-group">
-        <span>Enable External API</span>
-        <label class="toggleButton" >
+        <span id="enableExternalApi"></span>
+        <label class="toggleButton">
           <input type="checkbox" id="useExternalApi" class="toggleButton__checkbox" />
         </label>
       </div>
 
-      <label for="apiKey">API Key</label>
-      <input type="text" id="apiKey" placeholder="Enter your API key">
+      <div id="apiKeyContainer" style="display: none">
+        <label for="apiKey" id="apiKeyLabel"></label>
+        <input type="text" id="apiKey">
+      </div>
 
       <div id="apiSettings" style="display: none">
-        <label>Target language for reading posts</label>
+        <label id="apiReadingLabel"></label>
         <select id="apiReadingLanguage">
-          <option value="">Use browser language setting</option>
-          <!-- Full language list will be populated here -->
+          <option value="" id="useBrowserLanguage2"></option>
         </select>
 
-        <label>Target language for writing posts</label>
+        <label id="apiWritingLabel"></label>
         <select id="apiWritingLanguage">
-          <!-- Full language list will be populated here -->
         </select>
       </div>
     </div>
   </div>
 
-  <button id="saveButton">Save Settings</button>
-  <div id="successMessage" class="success">Settings saved successfully</div>
+  <button id="saveButton" type="button"></button>
+  <div id="successMessage" class="success"></div>
 
   <script type="module" src="iltr_options.js"></script>
 </body>

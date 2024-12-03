@@ -1,5 +1,22 @@
 // background.js
-import { getLanguageName } from './utils/languages.js';
+const supportedLanguages = {
+  ar: "Arabic", bg: "Bulgarian", bn: "Bengali", cs: "Czech", da: "Danish", 
+  de: "German", el: "Greek", en: "English", es: "Spanish", et: "Estonian",
+  fi: "Finnish", fr: "French", gu: "Gujarati", he: "Hebrew", hi: "Hindi",
+  hr: "Croatian", hu: "Hungarian", id: "Indonesian", it: "Italian", 
+  ja: "Japanese", kn: "Kannada", ko: "Korean", lt: "Lithuanian", 
+  lv: "Latvian", ml: "Malayalam", mr: "Marathi", nl: "Dutch", no: "Norwegian",
+  pl: "Polish", pt: "Portuguese", ro: "Romanian", ru: "Russian", 
+  sk: "Slovak", sl: "Slovenian", sr: "Serbian", sv: "Swedish", 
+  sw: "Swahili", ta: "Tamil", te: "Telugu", th: "Thai", tr: "Turkish",
+  uk: "Ukrainian", ur: "Urdu", vi: "Vietnamese", zh: "Chinese"
+};
+
+const getLanguageName = async (code) => {
+  const result = await chrome.storage.local.get(['supportedLanguages']);
+  const supportedLanguages = result.supportedLanguages;
+  return supportedLanguages[code] || code;
+};
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'translate') {
@@ -32,14 +49,13 @@ async function handleTranslation(text, sourceLang, targetLang, apiKey) {
       throw new Error('API key is not set');
     }
 
-    const prompt = generatePrompt(text, sourceLang, targetLang);
+    const prompt = await generatePrompt(text, sourceLang, targetLang);
     console.log('Generated prompt:', prompt);
 
     const translatedText = await callGeminiAPI(prompt, apiKey);
     console.log('API Response:', translatedText);
     
-    // レスポンスをオブジェクトとして返す
-    return { text: translatedText };  // この形式に修正
+    return { text: translatedText };
 
   } catch (error) {
     console.error('Translation error:', error);
@@ -47,11 +63,13 @@ async function handleTranslation(text, sourceLang, targetLang, apiKey) {
   }
 }
 
-function generatePrompt(text, sourceLang, targetLang) {
+async function generatePrompt(text, sourceLang, targetLang) {
 
   console.log(`Translate ${sourceLang}`)
-  const sourceLanguageName = getLanguageName(sourceLang);
-  const targetLanguageName = getLanguageName(targetLang);
+  const [sourceLanguageName, targetLanguageName] = await Promise.all([
+    getLanguageName(sourceLang),
+    getLanguageName(targetLang)
+  ]);
   return `Translate ${sourceLanguageName} to ${targetLanguageName}. Only response translate result.\n\n${text}`;
 }
 
@@ -59,6 +77,7 @@ async function callGeminiAPI(prompt, apiKey, maxRetries = 3) {
   const client = initializeGeminiClient(apiKey);
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${client.generationConfig.model}:generateContent`;
   
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
@@ -84,7 +103,6 @@ async function callGeminiAPI(prompt, apiKey, maxRetries = 3) {
       const data = await response.json();
       console.log('Raw API response:', data);
       
-      // レスポンスの構造をより詳細にチェック
       if (!data.candidates || !data.candidates[0]) {
         throw new Error('No candidates in response');
       }
@@ -94,13 +112,12 @@ async function callGeminiAPI(prompt, apiKey, maxRetries = 3) {
         throw new Error('Invalid candidate format');
       }
 
-      // テキストデータの取り出しを確実に
       const translatedText = candidate.content.parts[0]?.text;
       if (!translatedText) {
         throw new Error('No text in response');
       }
 
-      console.log('Extracted text:', translatedText); // 抽出したテキストを確認
+      console.log('Extracted text:', translatedText); 
       return translatedText;
 
     } catch (error) {

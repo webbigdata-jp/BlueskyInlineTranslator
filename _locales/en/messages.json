@@ -29,5 +29,98 @@
   },
   "replaceWithTranslation": {
     "message": "Replace with translation"
+  },
+  "errorNeedAPIKey":{
+    "message": "To use external APIs, you need to register an API key. Please set on the option page."
+  },
+  "modelDownloadError":{
+    "message": "Failed to download model. Please try again later"
+  },
+  "externalAPIFlagNotice":{
+    "message": "Translation was not possible with the local model. Translation may be possible if you enable the External API in the options settings."
+  },
+  "translationRequired": {
+    "message": "Translation API Setup Required",
+    "description": "Title for the translation setup alert"
+  },
+  "translationMessage": {
+    "message": "To use this extension, please type chrome://flags/#translation-api in your address bar and enable the Translation API. For translations other than English, Spanish and Japanese, please set them on the options page.",
+    "description": "Message explaining the need to enable the Translation API"
+  },
+  "openSettings": {
+    "message": "Open Settings",
+    "description": "Button text to open settings"
+  },
+  "extensionName": {
+    "message": "Bluesky Inline Translator"
+  },
+  "extensionDescription": {
+    "message": "Enhance your Bluesky experience with instant inline translations."
+  },
+  "introText": {
+    "message": "Enhance your Bluesky experience with instant inline translations. This extension provides seamless translations directly on the page using Chrome's built-in AI translator, without redirecting to external services.\n\nTranslate posts while reading or composing. For languages beyond Chrome's built-in support (English, Spanish, and Japanese), you can enable Google Gemini API integration."
+  },
+  "setupGuideTitle": {
+    "message": "⚠️ Required: Enable Chrome's Built-in Translator"
+  },
+  "setupGuideStep1": {
+    "message": "Visit chrome://flags/#translation-api in a new tab"
+  },
+  "setupGuideStep2": {
+    "message": "Enable \"Experimental translation API\""
+  },
+  "setupGuideStep3": {
+    "message": "Restart Chrome to apply changes"
+  },
+  "localModelTab": {
+    "message": "Local Model"
+  },
+  "externalApiTab": {
+    "message": "External API"
+  },
+  "localModelSettingsTitle": {
+    "message": "Local Model Settings"
+  },
+  "localModelNotice": {
+    "message": "Chrome's built-in translator offers fast, secure, offline translation with limited language support (currently English, Japanese, and Spanish only).\nFor additional language support, please switch to the External API tab."
+  },
+  "targetLanguageReading": {
+    "message": "Target language for reading posts"
+  },
+  "targetLanguageWriting": {
+    "message": "Target language for writing posts"
+  },
+  "useBrowserLanguage": {
+    "message": "Use browser language setting"
+  },
+  "externalApiSettingsTitle": {
+    "message": "External API Settings"
+  },
+  "externalApiNotice": {
+    "message": "Use Google Gemini API to translate languages not supported by Chrome's built-in translator. Gemini supports over 40 languages with a generous free tier (1,500 requests/day, 15/minute). Note: Translation content will be processed through Google's servers."
+  },
+  "enableExternalApi": {
+    "message": "Enable External API"
+  },
+  "apiKey": {
+    "message": "API Key"
+  },
+  "saveSettings": {
+    "message": "Save Settings"
+  },
+  "settingsSaved": {
+    "message": "Settings saved successfully"
+  },
+  "saveButton": {
+    "message": "Save Settings"
+  },
+  "apiKeyLabel": {
+    "message": "API Key"
+  },
+  "apiReadingLabel": {
+    "message": "Target language for reading posts"
+  },
+  "apiWritingLabel": {
+    "message": "Target language for writing posts"
   }
 }

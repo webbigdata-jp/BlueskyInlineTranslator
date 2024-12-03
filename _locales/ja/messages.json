@@ -29,5 +29,98 @@
   },
   "replaceWithTranslation": {
     "message": "翻訳文に置き換え"
+  },
+  "errorNeedAPIKey":{
+    "message": "外部APIの利用にはAPIキーの登録が必要です。オプションページで設定してください"
+  },
+  "modelDownloadError":{
+    "message": "モデルのダウンロードに失敗しました。しばらくしてからもう一度実行してください"
+  },
+  "externalAPIFlagNotice":{
+    "message": "ローカルモデルで翻訳ができませんでした。オプション設定でExternal APIを有効化すると翻訳可能な場合があります。"
+  },
+  "translationRequired": {
+    "message": "翻訳APIの設定が必要です",
+    "description": "Title for the translation setup alert"
+  },
+  "translationMessage": {
+    "message": "この拡張機能を使用するには、アドレスバーに chrome://flags/#translation-api と入力し、Translation API をEnableにしてください。英語、スペイン語、日本語以外の翻訳はオプションページで設定してください。",
+    "description": "Message explaining the need to enable the Translation API"
+  },
+  "openSettings": {
+    "message": "設定を開く",
+    "description": "Button text to open settings"
+  },
+  "extensionName": {
+    "message": "Bluesky Inline Translator"
+  },
+  "extensionDescription": {
+    "message": "Blueskyでインライン翻訳機能を体験"
+  },
+  "introText": {
+    "message": "Blueskyの多言語コミュニケーション体験をインライン翻訳で向上させましょう。この拡張機能は、Chromeの内蔵翻訳機能を使用して、外部サービスにリダイレクトすることなく、ページ上で翻訳を提供します。\n\n投稿の読み書き時に翻訳が可能です。Chromeの内蔵サポート（英語、スペイン語、日本語）以外の言語については、Google Gemini APIを有効にすることができます。"
+  },
+  "setupGuideTitle": {
+    "message": "⚠️ 必須：Chromeの内蔵翻訳機能を有効にする"
+  },
+  "setupGuideStep1": {
+    "message": "新しいタブでchrome://flags/#translation-apiにアクセス"
+  },
+  "setupGuideStep2": {
+    "message": "「Experimental translation API」を有効化"
+  },
+  "setupGuideStep3": {
+    "message": "変更を適用するためにChromeを再起動"
+  },
+  "localModelTab": {
+    "message": "ローカルモデル"
+  },
+  "externalApiTab": {
+    "message": "外部API"
+  },
+  "localModelSettingsTitle": {
+    "message": "ローカルモデル設定"
+  },
+  "localModelNotice": {
+    "message": "Chromeの内蔵翻訳機能は、高速で安全なオフライン翻訳を提供しますが、対応言語は限られています（現在は英語、日本語、スペイン語のみ）。\n追加の言語サポートが必要な場合は、外部APIタブに切り替えてください。"
+  },
+  "targetLanguageReading": {
+    "message": "投稿を読む際の翻訳先言語"
+  },
+  "targetLanguageWriting": {
+    "message": "投稿を書く際の翻訳先言語"
+  },
+  "useBrowserLanguage": {
+    "message": "ブラウザの言語設定を使用"
+  },
+  "externalApiSettingsTitle": {
+    "message": "外部API設定"
+  },
+  "externalApiNotice": {
+    "message": "Chromeの内蔵翻訳機能でサポートされていない言語を翻訳するには、Google Gemini APIを使用します。Geminiは40以上の言語をサポートし、無料枠（1日1,500リクエスト、1分間に15リクエスト）を提供します。注意：翻訳コンテンツはGoogleのサーバーを通じて処理されます。"
+  },
+  "enableExternalApi": {
+    "message": "外部APIを有効にする"
+  },
+  "apiKey": {
+    "message": "APIキー"
+  },
+  "saveSettings": {
+    "message": "設定を保存"
+  },
+  "settingsSaved": {
+    "message": "設定が正常に保存されました"
+  },
+  "saveButton": {
+    "message": "設定を保存"
+  },
+  "apiKeyLabel": {
+    "message": "API Key"
+  },
+  "apiReadingLabel": {
+    "message": "投稿を読む際の翻訳先言語"
+  },
+  "apiWritingLabel": {
+    "message": "投稿を書く際の翻訳先言語"
   }
 }

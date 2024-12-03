@@ -1,3 +1,57 @@
+let translationSupported = false;
+
+async function checkTranslationSupport() {
+  try {
+      translationSupported = 'translation' in self && 'createTranslator' in self.translation;
+      if (!translationSupported) {
+          showTranslationAlert();
+          return false;
+      }
+      return true;
+  } catch (e) {
+      console.error('Translation API check failed:', e);
+      showTranslationAlert();
+      return false;
+  }
+}
+
+function showTranslationAlert() {
+  const existingAlert = document.getElementById('translation-settings-alert');
+  if (existingAlert) existingAlert.remove();
+
+  const alertDiv = document.createElement('div');
+  alertDiv.id = 'translation-settings-alert';
+  alertDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ff4444;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+  `;
+
+  alertDiv.innerHTML = `
+    <div>
+        <strong>${chrome.i18n.getMessage("translationRequired") || "Translation API Setup Required"}</strong>
+        <p style="margin: 5px 0;">${chrome.i18n.getMessage("translationMessage")}</p>
+    </div>
+    <button onclick="this.parentElement.remove()" 
+            style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0;">
+        ×
+    </button>
+  `;
+  document.body.appendChild(alertDiv);
+}
+
+
 let translationSettings = {
   useLocal: true,
   useExternalApi: false,
@@ -8,7 +62,8 @@ let translationSettings = {
   apiWritingLanguage: 'en'
 };
 
-async function loadSettings() {
+
+async function getSettings() {
   return new Promise((resolve) => {
     chrome.storage.sync.get({
       useLocal: true,
@@ -18,9 +73,40 @@ async function loadSettings() {
       localWritingLanguage: 'en',
       apiReadingLanguage: '',
       apiWritingLanguage: 'en'
-    }, function(items) {
-      translationSettings = items;
-      resolve(items);
+    }, async function(items) {
+      try {
+        // APIキーが存在する場合のみ復号化
+        let decryptedApiKey = '';
+        if (items.apiKey) {
+          decryptedApiKey = await decryptData(items.apiKey);
+        }
+
+        // グローバル変数に設定を保存
+        translationSettings = {
+          useLocal: items.useLocal,
+          useExternalApi: items.useExternalApi,
+          apiKey: decryptedApiKey,
+          localReadingLanguage: items.localReadingLanguage,
+          localWritingLanguage: items.localWritingLanguage,
+          apiReadingLanguage: items.apiReadingLanguage,
+          apiWritingLanguage: items.apiWritingLanguage
+        };
+
+        resolve(translationSettings);
+      } catch (error) {
+        console.error('Error while loading settings:', error);
+        // エラーが発生した場合はデフォルト値を使用
+        translationSettings = {
+          useLocal: true,
+          useExternalApi: false,
+          apiKey: '',
+          localReadingLanguage: '',
+          localWritingLanguage: 'en',
+          apiReadingLanguage: '',
+          apiWritingLanguage: 'en'
+        };
+        resolve(translationSettings);
+      }
     });
   });
 }
@@ -77,10 +163,22 @@ async function detectLanguage(text) {
         resolve('es');
         return;
       }
-      
-      // 固有名詞が多い場合は追加チェック
+
+      try {
+        console.log(typeof detected.percentage);
+        if (detected.percentage > 90){
+          const baseLanguage = detected.language.split('-')[0];
+          console.log('percentage');
+          resolve(baseLanguage);
+          return
+        }
+      } catch (error) {
+        console.error('Error in promise:', error);
+        reject(error);
+      }
+      console.log('no percentage');
+
       if (isProbablyProperNouns(textWithoutFlags)) {
-        // アルファベットの割合をチェック
         const englishCharRegex = /[a-zA-Z]/g;
         const englishCharCount = (textWithoutFlags.match(englishCharRegex) || []).length;
         const englishCharRatio = englishCharCount / textWithoutFlags.length;
@@ -91,15 +189,14 @@ async function detectLanguage(text) {
         }
       }
 
-      // ASCII文字の割合をチェック
       const asciiCharCount = textWithoutFlags.split('').filter(char => char.charCodeAt(0) < 128).length;
       const asciiRatio = asciiCharCount / textWithoutFlags.length;
       
-      if (asciiRatio > 0.9) {  // ほとんどがASCII文字の場合
+      if (asciiRatio > 0.9) {
         resolve('en');
         return;
       }
-      // 言語コードからカントリーコードを削除（例：en-US → en）
+      // en-US → en
       const baseLanguage = detected.language.split('-')[0];
 
       if (baseLanguage === 'en' && hasSpanishCharacteristics(textWithoutFlags)) {
@@ -130,6 +227,7 @@ async function getTargetLanguage(mode = 'reading') {
   return translationSettings.apiWritingLanguage;
 }
 
+
 async function translateWithExternalAPI(text, sourceLang, targetLang) {
   console.log("In translateWithExternalAPI");
   return new Promise((resolve, reject) => {
@@ -150,53 +248,72 @@ async function translateWithExternalAPI(text, sourceLang, targetLang) {
 }
 
 
-async function translateText(text, mode, progressCallback = null) {
+async function translateText(text, targetLang, progressCallback = null) {
+
+  if ('translation' in self && 'createTranslator' in self.translation) {
+    console.log("supported");
+  }
+  console.log("In translateText");
+
   try {
     const sourceLang = await detectLanguage(text);
-    const targetLang = await getTargetLanguage(mode);
-    
     const canTranslate = await translation.canTranslate({
       sourceLanguage: sourceLang,
       targetLanguage: targetLang
     });
+    console.log(sourceLang);
+    console.log(targetLang);
 
-    // ローカルモデルで翻訳可能
-    if (canTranslate === 'yes') {
-      const translator = await translation.createTranslator({
+    if (canTranslate === 'readily') {
+      console.log("In readily");
+        const translator = await translation.createTranslator({
         sourceLanguage: sourceLang,
         targetLanguage: targetLang
       });
       return await translator.translate(text);
     }
     
-    // ダウンロード後に翻訳可能
     if (canTranslate === 'after-download') {
+      console.log("In after-download");
       const translator = await translation.createTranslator({
         sourceLanguage: sourceLang,
         targetLanguage: targetLang
       });
+
       translator.ondownloadprogress = (e) => {
+        if (!e.total) return;
         const progress = Math.round((e.loaded / e.total) * 100);
         if (progressCallback) {
           progressCallback(chrome.i18n.getMessage('downloadingModelProgress', [progress]));
         }
       };
-      await translator.ready;
-      return await translator.translate(text);
+  
+      try {
+        await translator.ready;
+        const result = await translator.translate(text);
+        translator.ondownloadprogress = null; 
+        return result;
+      } catch (error) {
+        progressCallback?.(chrome.i18n.getMessage('modelDownloadError'));
+        throw error;
+      }
     }
 
-    // 外部APIが許可されていない場合はエラー
     if (!translationSettings.useExternalApi) {
       throw new Error(chrome.i18n.getMessage('errorUnsupportedLanguagePair'));
     }
 
-    // 最後の手段として外部API
+    if (translationSettings.apiKey == "") {
+      throw new Error(chrome.i18n.getMessage('errorNeedAPIKey'));
+    }
+
     return await translateWithExternalAPI(text, sourceLang, targetLang);
   } catch (e) {
     console.error('Translation error:', e);
-    return chrome.i18n.getMessage('translationError', [e.message]);
+    return new Error(chrome.i18n.getMessage('externalAPIFlagNotice', [e.message]));
   }
 }
+
 
 async function addTranslateButton(postElement) {
   console.log("addTranslateButton");
@@ -226,36 +343,57 @@ async function addTranslateButton(postElement) {
   translateButton.style.userSelect = 'none';
   
   translateButton.addEventListener('click', async (event) => {
-    event.stopPropagation();  
     console.log('Translation button clicked');
-    const originalText = postElement.textContent;
-
-    let translatedDiv = postElement.parentElement.querySelector('.translated-text');
+    const clickedLink = event.target.closest('a');
+    if (clickedLink) { 
+      // feed page a link.
+      event.preventDefault();
+    }
+    event.stopPropagation();  
     
+    const originalText = postElement.textContent;
+    let translatedDiv = postElement.parentElement.querySelector('.translated-text');
+
     if (!translatedDiv) {
       translatedDiv = document.createElement('div');
       translatedDiv.className = 'translated-text';
-      translatedDiv.style.marginTop = '8px';
+      
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.width = '100%';
+      container.style.gap = '8px';
+      
+      const originalDiv = document.createElement('div');
+      originalDiv.style.width = '100%';
+      originalDiv.style.wordBreak = 'break-word';
+      originalDiv.appendChild(postElement.cloneNode(true));
+      
+      translatedDiv.style.width = '100%';
       translatedDiv.style.padding = '8px';
       translatedDiv.style.backgroundColor = 'rgba(0, 133, 255, 0.05)';
       translatedDiv.style.borderRadius = '8px';
-      translatedDiv.style.whiteSpace = 'pre-wrap'; 
-      postElement.parentElement.insertBefore(translatedDiv, postElement.nextSibling);
+      translatedDiv.style.wordBreak = 'break-word';
+      
+      container.appendChild(originalDiv);
+      container.appendChild(translatedDiv);
+      
+      postElement.parentElement.replaceChild(container, postElement);
     }
 
-    translatedDiv.textContent = chrome.i18n.getMessage('translatingMessage');
+    //translatedDiv.textContent = chrome.i18n.getMessage('translatingMessage');
     
     try {
       const translatedText = await translateText(
         originalText, 
-        "reading",
+        targetLang,
         (progressMessage) => {
           translatedDiv.textContent = progressMessage;
         }
       );
       translatedDiv.textContent = translatedText;
     } catch (error) {
-      translatedDiv.textContent = chrome.i18n.getMessage('translationFailed');
+      translatedDiv.textContent = chrome.i18n.getMessage('externalAPIFlagNotice', [e.message]);
       console.error('Translation error:', error);
     }
   });
@@ -275,7 +413,15 @@ async function addPostTranslateButton() {
   if (!spacer) return;
 
   const sourceLang = await getTargetLanguage("reading");
-  const targetLang = await getTargetLanguage("writing");
+  targetLang = await getTargetLanguage("writing");
+
+  if (sourceLang == targetLang){
+    if (targetLang != "en"){
+      targetLang = "en"
+    }else{
+      targetLang = "ja"
+    }
+  }
 
   const buttonText = `${sourceLang}→${targetLang}`;
 
@@ -325,7 +471,7 @@ async function addPostTranslateButton() {
 
       const translatedText = await translateText(
         originalText, 
-        "writing",
+        targetLang,
         (progressMessage) => {
           translatedDiv.textContent = progressMessage;
         }
@@ -360,7 +506,7 @@ async function addPostTranslateButton() {
         });
       }
     } catch (error) {
-      alert('Translation failed');
+      translatedDiv.textContent = chrome.i18n.getMessage('externalAPIFlagNotice', [e.message]);
       console.error('Translation error:', error);
     } finally {
       translateButton.textContent = buttonText;
@@ -409,7 +555,12 @@ async function checkForComposeForm() {
 }
 
 async function initialize() {
-  await loadSettings();
+  if (!await checkTranslationSupport()) {
+    console.warn('Translation API is not available. Some features may not work.');
+    return;
+  }
+
+  await getSettings();
   setTimeout(async () => {
     await processNewPosts();
     await initializeObserver();
@@ -422,21 +573,33 @@ new MutationObserver(() => {
   const url = location.href;
   if (url !== lastUrl) {
     lastUrl = url;
-    setTimeout(processNewPosts, 1000);
+    if (translationSupported) { 
+      setTimeout(processNewPosts, 1000);
+    }
   }
 }).observe(document, {subtree: true, childList: true});
 
 const composerObserver = new MutationObserver(() => {
-  checkForComposeForm();
+  if (translationSupported) {  
+    checkForComposeForm();
+  }
 });
-
 composerObserver.observe(document.body, {
   childList: true,
   subtree: true
 });
 
-window.addEventListener('load', () => setTimeout(processNewPosts, 1000));
-window.addEventListener('popstate', () => setTimeout(processNewPosts, 1000));
+window.addEventListener('load', () => {
+  if (translationSupported) {
+      setTimeout(processNewPosts, 1000);
+  }
+});
+
+window.addEventListener('popstate', () => {
+  if (translationSupported) {
+      setTimeout(processNewPosts, 1000);
+  }
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);

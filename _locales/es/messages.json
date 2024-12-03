@@ -29,5 +29,98 @@
   },
   "replaceWithTranslation": {
     "message": "Reemplazar con traducción"
+  },
+  "errorNeedAPIKey":{
+    "message": "Para utilizar API externas, debe registrar una clave API. Establezca en la página de opciones."
+  },
+  "modelDownloadError":{
+    "message": "No se pudo descargar el modelo. Por favor inténtalo de nuevo más tarde."
+  },
+  "externalAPIFlagNotice":{
+    "message": "No se pudo traducir con el modelo local. La traducción puede ser posible si habilita la API externa en la configuración de opciones."
+  },
+  "translationRequired": {
+    "message": "Configuración de API de traducción requerida",
+    "description": "Title for the translation setup alert"
+  },
+  "translationMessage": {
+    "message": "Para usar esta extensión, ingrese chrome://flags/#translation-api en la barra de direcciones y habilite la API de traducción. Configure traducciones para idiomas distintos del inglés, español y japonés en la página de opciones.",
+    "description": "Message explaining the need to enable the Translation API"
+  },
+  "openSettings": {
+    "message": "Abrir Configuración",
+    "description": "Button text to open settings"
+  },
+  "extensionName": {
+    "message": "Traductor Inline para Bluesky"
+  },
+  "extensionDescription": {
+    "message": "Mejora tu experiencia en Bluesky con traducciones instantáneas"
+  },
+  "introText": {
+    "message": "Mejora tu experiencia en Bluesky con traducciones instantáneas. Esta extensión proporciona traducciones directamente en la página utilizando el traductor incorporado de Chrome, sin redireccionar a servicios externos.\n\nTraduce publicaciones mientras lees o escribes. Para idiomas más allá del soporte incorporado de Chrome (inglés, español y japonés), puedes habilitar la integración con Google Gemini API."
+  },
+  "setupGuideTitle": {
+    "message": "⚠️ Requerido: Habilitar el Traductor Incorporado de Chrome"
+  },
+  "setupGuideStep1": {
+    "message": "Visita chrome://flags/#translation-api en una nueva pestaña"
+  },
+  "setupGuideStep2": {
+    "message": "Habilita \"Experimental translation API\""
+  },
+  "setupGuideStep3": {
+    "message": "Reinicia Chrome para aplicar los cambios"
+  },
+  "localModelTab": {
+    "message": "Modelo Local"
+  },
+  "externalApiTab": {
+    "message": "API Externa"
+  },
+  "localModelSettingsTitle": {
+    "message": "Configuración del Modelo Local"
+  },
+  "localModelNotice": {
+    "message": "La función de traducción integrada de Chrome proporciona una traducción fuera de línea rápida y segura con soporte de idiomas limitado (actualmente solo inglés, japonés y español). \nPara obtener compatibilidad con idiomas adicionales, cambie a la pestaña API externa."
+  },
+  "targetLanguageReading": {
+    "message": "Idioma objetivo para leer publicaciones"
+  },
+  "targetLanguageWriting": {
+    "message": "Idioma objetivo para escribir publicaciones"
+  },
+  "useBrowserLanguage": {
+    "message": "Usar configuración de idioma del navegador"
+  },
+  "externalApiSettingsTitle": {
+    "message": "Configuración de API Externa"
+  },
+  "externalApiNotice": {
+    "message": "Usa Google Gemini API para traducir idiomas no soportados por el traductor incorporado de Chrome. Gemini soporta más de 40 idiomas con un generoso nivel gratuito (1,500 solicitudes/día, 15/minuto). Nota: El contenido de traducción se procesará a través de los servidores de Google."
+  },
+  "enableExternalApi": {
+    "message": "Habilitar API Externa"
+  },
+  "apiKey": {
+    "message": "Clave API"
+  },
+  "saveSettings": {
+    "message": "Guardar Configuración"
+  },
+  "settingsSaved": {
+    "message": "Configuración guardada exitosamente"
+  },
+  "saveButton": {
+    "message": "Configuración guardada exitosamente"
+  },
+  "apiKeyLabel": {
+    "message": "clave API"
+  },
+  "apiReadingLabel": {
+    "message": "Guía de traducción al leer publicaciones."
+  },
+  "apiWritingLabel": {
+    "message": "El idioma al que deseas traducir tu publicación."
   }
 }
