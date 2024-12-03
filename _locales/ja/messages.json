@@ -97,7 +97,7 @@
     "message": "外部API設定"
   },
   "externalApiNotice": {
-    "message": "Chromeの内蔵翻訳機能でサポートされていない言語を翻訳するには、Google Gemini APIを使用します。Geminiは40以上の言語をサポートし、無料枠（1日1,500リクエスト、1分間に15リクエスト）を提供します。注意：翻訳コンテンツはGoogleのサーバーを通じて処理されます。"
+    "message": "Chromeの内蔵翻訳機能でサポートされていない言語を翻訳するには、Google Gemini APIを使用します。Geminiは40以上の言語をサポートし、無料枠（1日1,500リクエスト、1分間に15リクエスト）を提供します。API Keyはhttps://ai.google.dev/で取得してください。"
   },
   "enableExternalApi": {
     "message": "外部APIを有効にする"
@@ -122,5 +122,11 @@
   },
   "apiWritingLabel": {
     "message": "投稿を書く際の翻訳先言語"
+  },
+  "hideApiKey":{
+    "message": "非表示"
+  },
+  "showApiKey": {
+    "message": "表示"
   }
 }

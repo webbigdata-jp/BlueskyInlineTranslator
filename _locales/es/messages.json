@@ -97,7 +97,7 @@
     "message": "Configuración de API Externa"
   },
   "externalApiNotice": {
-    "message": "Usa Google Gemini API para traducir idiomas no soportados por el traductor incorporado de Chrome. Gemini soporta más de 40 idiomas con un generoso nivel gratuito (1,500 solicitudes/día, 15/minuto). Nota: El contenido de traducción se procesará a través de los servidores de Google."
+    "message": "Usa Google Gemini API para traducir idiomas no soportados por el traductor incorporado de Chrome. Gemini soporta más de 40 idiomas con un generoso nivel gratuito (1,500 solicitudes/día, 15/minuto). Obtenga la clave API en https://ai.google.dev/."
   },
   "enableExternalApi": {
     "message": "Habilitar API Externa"
@@ -122,5 +122,11 @@
   },
   "apiWritingLabel": {
     "message": "El idioma al que deseas traducir tu publicación."
+  },
+  "hideApiKey":{
+    "message": "Ocultar"
+  },
+  "showApiKey": {
+    "message": "Mostrar"
   }
 }

@@ -171,3 +171,9 @@ button {
 .toggleButton__checkbox:checked {
   left: calc(100% - 22px);
 }
+
+#toggleApiKeyVisibility {
+  min-width: 80px; /* ボタンの最小幅を設定 */
+  white-space: nowrap; /* テキストの折り返しを防止 */
+  padding: 8px 16px;
+}

@@ -1,5 +1,8 @@
+
+
 function localizeHtml() {
   const elementsToTranslate = [
+    'toggleApiKeyVisibility',
     'extensionName',
     'introText',
     'setupGuideTitle',
@@ -50,6 +53,11 @@ function localizeHtml() {
   const successMessage = document.getElementById('successMessage');
   if (successMessage) {
     successMessage.textContent = chrome.i18n.getMessage('settingsSaved');
+  }
+
+  const toggleButton = document.getElementById('toggleApiKeyVisibility');
+  if (toggleButton) {
+    toggleButton.textContent = chrome.i18n.getMessage('showApiKey');
   }
 }
 
@@ -114,8 +122,14 @@ function toggleApiSettings() {
   const apiKey = document.getElementById('apiKey');
   const apiKeyContainer = document.getElementById('apiKeyContainer');
   const apiSettings = document.getElementById('apiSettings');
+  const toggleButton = document.getElementById('toggleApiKeyVisibility');
 
-  apiKeyContainer.style.display = apiCheckbox.checked ? 'block' : 'none';
+  if (apiCheckbox.checked) {
+    apiKeyContainer.style.display = 'block';
+    toggleButton.textContent = chrome.i18n.getMessage('showApiKey');
+  } else {
+    apiKeyContainer.style.display = 'none';
+  }
   
   apiSettings.style.display = 
     (apiCheckbox.checked && apiKey.value.trim()) ? 'block' : 'none';
@@ -130,31 +144,44 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function initializeHtml() {
   localizeHtml();
-       
-  // サポート言語の取得と設定を待つ
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['supportedLanguages'], function(result) {
-      const supportedLanguages = result.supportedLanguages;
 
-      // 言語ドロップダウンの設定
-      const apiSelects = ['apiReadingLanguage', 'apiWritingLanguage'];
-      apiSelects.forEach(selectId => {
-        const select = document.getElementById(selectId);
-        if (select && supportedLanguages) {
-          Object.entries(supportedLanguages).forEach(([code, name]) => {
-            const option = document.createElement('option');
-            option.value = code;
-            option.textContent = `${name} (${code})`;
-            select.appendChild(option);
-          });
-        }
-      });
+  return new Promise(async (resolve) => {
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    async function tryGetLanguages() {
+      const result = await chrome.storage.local.get(['supportedLanguages']);
       
-      resolve();
-    });
+      if (result.supportedLanguages && Object.keys(result.supportedLanguages).length > 0) {
+        const supportedLanguages = result.supportedLanguages;
+        
+        // 言語ドロップダウンの設定
+        const apiSelects = ['apiReadingLanguage', 'apiWritingLanguage'];
+        apiSelects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          if (select) {
+            Object.entries(supportedLanguages).forEach(([code, name]) => {
+              const option = document.createElement('option');
+              option.value = code;
+              option.textContent = `${name} (${code})`;
+              select.appendChild(option);
+            });
+          }
+        });
+        
+        resolve();
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(tryGetLanguages, 1000); // 1秒待って再試行
+      } else {
+        console.error('Failed to load supported languages');
+        resolve(); // エラーでも続行
+      }
+    }
+    
+    await tryGetLanguages();
   });
 }
-
 
 async function loadSettings() {
   return new Promise((resolve) => {
@@ -168,7 +195,11 @@ async function loadSettings() {
       apiWritingLanguage: 'en'
     }, async function(items) {
       document.getElementById('useExternalApi').checked = items.useExternalApi;
-      document.getElementById('apiKey').value = await decryptData(items.apiKey);
+      const decryptedApiKey = await decryptData(items.apiKey);
+      const apiKeyInput = document.getElementById('apiKey');
+      apiKeyInput.value = decryptedApiKey;
+      apiKeyInput.type = 'password'; // Ensure masking on load
+      document.getElementById('toggleApiKeyVisibility').textContent = 'Show';
       document.getElementById('localReadingLanguage').value = items.localReadingLanguage;
       document.getElementById('localWritingLanguage').value = items.localWritingLanguage;
       document.getElementById('apiReadingLanguage').value = items.apiReadingLanguage;
@@ -180,21 +211,25 @@ async function loadSettings() {
   });
 }
 
-// 新しく追加する関数
+
 function setupEventListeners() {
-  // タブ切り替えのイベントリスナー設定
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
   
-  // API設定のイベントリスナー設定
   const apiCheckbox = document.getElementById('useExternalApi');
   const apiKey = document.getElementById('apiKey');
+  const toggleButton = document.getElementById('toggleApiKeyVisibility');
   
   apiCheckbox.addEventListener('change', toggleApiSettings);
   apiKey.addEventListener('input', toggleApiSettings);
+
+  toggleButton.addEventListener('click', () => {
+    const isPassword = apiKey.type === 'password';
+    apiKey.type = isPassword ? 'text' : 'password';
+    toggleButton.textContent = chrome.i18n.getMessage(isPassword ? 'hideApiKey' : 'showApiKey');
+  });
   
-  // 保存ボタンのイベントリスナー
   document.getElementById('saveButton').addEventListener('click', saveSettings);
 }
 

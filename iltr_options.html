@@ -66,7 +66,10 @@
 
       <div id="apiKeyContainer" style="display: none">
         <label for="apiKey" id="apiKeyLabel"></label>
-        <input type="text" id="apiKey">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="password" id="apiKey">
+          <button type="button" id="toggleApiKeyVisibility"></button>
+        </div>
       </div>
 
       <div id="apiSettings" style="display: none">

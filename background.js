@@ -12,6 +12,13 @@ const supportedLanguages = {
   uk: "Ukrainian", ur: "Urdu", vi: "Vietnamese", zh: "Chinese"
 };
 
+chrome.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason === 'install' || details.reason === 'update') {
+    await chrome.storage.local.set({ supportedLanguages });
+    console.log('Supported languages initialized');
+  }
+});
+
 const getLanguageName = async (code) => {
   const result = await chrome.storage.local.get(['supportedLanguages']);
   const supportedLanguages = result.supportedLanguages;

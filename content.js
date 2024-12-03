@@ -75,13 +75,11 @@ async function getSettings() {
       apiWritingLanguage: 'en'
     }, async function(items) {
       try {
-        // APIキーが存在する場合のみ復号化
         let decryptedApiKey = '';
         if (items.apiKey) {
           decryptedApiKey = await decryptData(items.apiKey);
         }
 
-        // グローバル変数に設定を保存
         translationSettings = {
           useLocal: items.useLocal,
           useExternalApi: items.useExternalApi,
@@ -95,7 +93,6 @@ async function getSettings() {
         resolve(translationSettings);
       } catch (error) {
         console.error('Error while loading settings:', error);
-        // エラーが発生した場合はデフォルト値を使用
         translationSettings = {
           useLocal: true,
           useExternalApi: false,
