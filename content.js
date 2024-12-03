@@ -53,7 +53,6 @@ function showTranslationAlert() {
 
 
 let translationSettings = {
-  useLocal: true,
   useExternalApi: false,
   apiKey: '',
   localReadingLanguage: '',
@@ -66,7 +65,6 @@ let translationSettings = {
 async function getSettings() {
   return new Promise((resolve) => {
     chrome.storage.sync.get({
-      useLocal: true,
       useExternalApi: false,
       apiKey: '',
       localReadingLanguage: '',
@@ -81,7 +79,6 @@ async function getSettings() {
         }
 
         translationSettings = {
-          useLocal: items.useLocal,
           useExternalApi: items.useExternalApi,
           apiKey: decryptedApiKey,
           localReadingLanguage: items.localReadingLanguage,
@@ -94,7 +91,6 @@ async function getSettings() {
       } catch (error) {
         console.error('Error while loading settings:', error);
         translationSettings = {
-          useLocal: true,
           useExternalApi: false,
           apiKey: '',
           localReadingLanguage: '',
@@ -207,9 +203,9 @@ async function detectLanguage(text) {
 }
 
 
-async function getTargetLanguage(mode = 'reading') {
+async function getTargetLanguage(mode = 'reading', model = 'local') {
   if (mode === 'reading') {
-    if (translationSettings.useLocal) {
+    if (model === 'local'){
       return translationSettings.localReadingLanguage || 
              chrome.i18n.getUILanguage().split('-')[0] || 
              navigator.language?.split('-')[0] || 
@@ -218,7 +214,7 @@ async function getTargetLanguage(mode = 'reading') {
     return translationSettings.apiReadingLanguage || 'en';
   }
   
-  if (translationSettings.useLocal) {
+  if (model === 'local') {
     return translationSettings.localWritingLanguage;
   }
   return translationSettings.apiWritingLanguage;
@@ -411,6 +407,10 @@ async function addPostTranslateButton() {
 
   const sourceLang = await getTargetLanguage("reading");
   targetLang = await getTargetLanguage("writing");
+
+  if (sourceLang == targetLang){
+    targetLang = await getTargetLanguage("writing", "api");
+  }
 
   if (sourceLang == targetLang){
     if (targetLang != "en"){

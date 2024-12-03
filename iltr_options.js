@@ -155,7 +155,6 @@ async function initializeHtml() {
       if (result.supportedLanguages && Object.keys(result.supportedLanguages).length > 0) {
         const supportedLanguages = result.supportedLanguages;
         
-        // 言語ドロップダウンの設定
         const apiSelects = ['apiReadingLanguage', 'apiWritingLanguage'];
         apiSelects.forEach(selectId => {
           const select = document.getElementById(selectId);
@@ -172,10 +171,10 @@ async function initializeHtml() {
         resolve();
       } else if (attempts < maxAttempts) {
         attempts++;
-        setTimeout(tryGetLanguages, 1000); // 1秒待って再試行
+        setTimeout(tryGetLanguages, 1000);
       } else {
         console.error('Failed to load supported languages');
-        resolve(); // エラーでも続行
+        resolve();
       }
     }
     
