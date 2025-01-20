@@ -4,7 +4,7 @@
   "version": "1.0",
   "description": "Inline translation of Bluesky web pages using Chrome's built-in AI translator or external API service",
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    "extension_pages": "script-src 'self'; object-src 'none';"
   },  
   "host_permissions": [
     "https://generativelanguage.googleapis.com/v1beta/*"
