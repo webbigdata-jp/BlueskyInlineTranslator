@@ -7,15 +7,25 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
   },  
   "host_permissions": [
-    "https://generativelanguage.googleapis.com/*",
-    "https://bsky.app/*"
+    "https://generativelanguage.googleapis.com/v1beta/*"
   ],
   "default_locale": "en",
   "options_page": "iltr_options.html",
-  "permissions": ["scripting", "storage"],
+  "permissions": ["storage"],
   "content_scripts": [
     {
-      "matches": ["https://bsky.app/*"],
+    "matches": [
+        "https://bsky.app",
+        "https://bsky.app/",
+        "https://bsky.app/profile",
+        "https://bsky.app/profile/*",
+        "https://bsky.app/lists",
+        "https://bsky.app/lists/*",
+        "https://bsky.app/feeds",
+        "https://bsky.app/feeds/*",
+        "https://bsky.app/search",
+        "https://bsky.app/search/*"
+        ],
       "js": ["iltr_options.js", "content.js"],
       "css": ["styles.css"]
     }
